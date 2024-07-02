@@ -2,6 +2,6 @@ import { Button } from "@mui/material";
 
 export default function Home() {
   return (
-    <Button variant="contained">Hello world</Button>
+    <Button variant="contained">Home</Button>
   );
 }
