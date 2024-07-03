@@ -1,10 +1,27 @@
-import React from 'react';
+import React, { FormEvent, useState } from 'react';
 import Image from 'next/image';
-import { Container, Typography, TextField, Button, Link } from '@mui/material';
+import { Container, Typography, TextField, Button, Link, Alert } from '@mui/material';
 import { Box } from '@mui/system';
 import logoImg from '../../assets/logo.svg';
+import { useCreateUserWithEmailAndPassword } from 'react-firebase-hooks/auth';
+import { auth } from '@/services/firebaseConfig';
 
 export default function Register() {
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [
+    createUserWithEmFailAndPassword,
+    user,
+    loading,
+    error,
+  ] = useCreateUserWithEmailAndPassword(auth);
+
+  function handleRegister(e: FormEvent) {
+    e.preventDefault()
+    createUserWithEmFailAndPassword(email, password)
+  }
+
   return (
     <Container maxWidth="xs">
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 5 }}>
@@ -26,6 +43,7 @@ export default function Register() {
             autoComplete="email"
             placeholder="johndoe@gmail.com"
             variant="outlined"
+            onChange={e => setEmail(e.target.value)}
           />
           <TextField
             margin="normal"
@@ -38,11 +56,18 @@ export default function Register() {
             autoComplete="new-password"
             placeholder="********************"
             variant="outlined"
+            onChange={e => setPassword(e.target.value)}
           />
+          {error && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              Erro: {error.message}
+            </Alert>
+          )}
           <Button
             type="submit"
             fullWidth
             variant="contained"
+            onClick={handleRegister}
             sx={{ mt: 3, mb: 2, bgcolor: '#4763E4', color: '#fff' }}
           >
             Registrar

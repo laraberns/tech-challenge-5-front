@@ -1,10 +1,34 @@
-import React from 'react';
+import React, { FormEvent, useEffect, useState } from 'react';
 import Image from 'next/image';
-import { Container, Typography, TextField, Button, Link } from '@mui/material';
+import { Container, Typography, TextField, Button, Link, Alert } from '@mui/material';
 import { Box } from '@mui/system';
 import logoImg from '../../assets/logo.svg';
+import { useSignInWithEmailAndPassword } from 'react-firebase-hooks/auth';
+import { auth } from '@/services/firebaseConfig';
+import { useRouter } from 'next/router';
 
 export default function Login() {
+  const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [
+    signInWithEmailAndPassword,
+    user,
+    loading,
+    error,
+  ] = useSignInWithEmailAndPassword(auth);
+
+  function handleSignIn(e: FormEvent) {
+    e.preventDefault();
+    signInWithEmailAndPassword(email, password);
+  }
+
+  useEffect(() => {
+    if (user) {
+      router.push('/');
+    }
+  }, [user, router]);
+
   return (
     <Container maxWidth="xs">
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 5 }}>
@@ -15,7 +39,7 @@ export default function Login() {
         <Typography variant="body1" sx={{ textAlign: 'center', mt: 2 }}>
           Entre com suas credenciais abaixo para acessar sua conta.
         </Typography>
-        <Box component="form" noValidate sx={{ mt: 2 }}>
+        <Box component="form" noValidate sx={{ mt: 2 }} onSubmit={handleSignIn}>
           <TextField
             margin="normal"
             required
@@ -27,6 +51,7 @@ export default function Login() {
             autoFocus
             placeholder="johndoe@gmail.com"
             variant="outlined"
+            onChange={e => setEmail(e.target.value)}
           />
           <TextField
             margin="normal"
@@ -39,12 +64,19 @@ export default function Login() {
             autoComplete="current-password"
             placeholder="********************"
             variant="outlined"
+            onChange={e => setPassword(e.target.value)}
           />
+          {error && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              Erro: Credenciais inválidas.
+            </Alert>
+          )}
           <Button
             type="submit"
             fullWidth
             variant="contained"
             sx={{ mt: 3, mb: 2, bgcolor: '#4763E4', color: '#fff' }}
+            disabled={loading}
           >
             Entrar
           </Button>

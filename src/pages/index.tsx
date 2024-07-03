@@ -1,7 +1,29 @@
-import { Button } from "@mui/material";
+import LoadingPage from '@/components/loading';
+import withAuth from '@/components/withAuth';
+import { auth } from '@/services/firebaseConfig';
+import { useSignOut } from 'react-firebase-hooks/auth';
 
-export default function Home() {
+const SignOut = () => {
+  const [signOut, loading] = useSignOut(auth);
+
+  if (loading) {
+    return <LoadingPage/>;
+  }
+
   return (
-    <Button variant="contained">Home</Button>
+    <div className="App">
+      <button
+        onClick={async () => {
+          const success = await signOut();
+          if (success) {
+            alert('Logout com sucesso');
+          }
+        }}
+      >
+        Sair
+      </button>
+    </div>
   );
-}
+};
+
+export default withAuth(SignOut);
