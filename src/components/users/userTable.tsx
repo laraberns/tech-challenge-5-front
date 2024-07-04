@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, Theme, styled } from '@mui/material';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Typography, Theme, styled } from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
+import ConfirmationDialog from '../confirmationDialog';
 
 export interface IUser {
   id: number;
@@ -17,23 +18,23 @@ interface UserTableProps {
 }
 
 const StyledTableCell = styled(TableCell)(({ theme }: { theme: Theme }) => ({
-  backgroundColor: theme.palette.grey[600],
+  backgroundColor: '#a09abd',
   color: theme.palette.common.white, 
   fontWeight: 'bold', 
   fontSize: theme.typography.subtitle1.fontSize, 
 }));
 
 const UserTable: React.FC<UserTableProps> = ({ users, onEdit, onDelete }) => {
-  const [open, setOpen] = useState(false);
+  const [openConfirmation, setOpenConfirmation] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
 
-  const handleOpen = (id: number) => {
+  const handleOpenConfirmation = (id: number) => {
     setSelectedUserId(id);
-    setOpen(true);
+    setOpenConfirmation(true);
   };
 
-  const handleClose = () => {
-    setOpen(false);
+  const handleCloseConfirmation = () => {
+    setOpenConfirmation(false);
     setSelectedUserId(null);
   };
 
@@ -41,7 +42,7 @@ const UserTable: React.FC<UserTableProps> = ({ users, onEdit, onDelete }) => {
     if (selectedUserId !== null) {
       onDelete(selectedUserId);
     }
-    handleClose();
+    handleCloseConfirmation();
   };
 
   return (
@@ -68,7 +69,7 @@ const UserTable: React.FC<UserTableProps> = ({ users, onEdit, onDelete }) => {
                   <IconButton onClick={() => onEdit(user)}>
                     <Edit />
                   </IconButton>
-                  <IconButton onClick={() => handleOpen(user.id)}>
+                  <IconButton onClick={() => handleOpenConfirmation(user.id)}>
                     <Delete />
                   </IconButton>
                 </TableCell>
@@ -78,22 +79,12 @@ const UserTable: React.FC<UserTableProps> = ({ users, onEdit, onDelete }) => {
         </Table>
       </TableContainer>
 
-      <Dialog open={open} onClose={handleClose}>
-        <DialogTitle>Confirmar Deleção</DialogTitle>
-        <DialogContent>
-        <Typography variant="body1">
-            Tem certeza que deseja deletar este usuário?
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose} variant="outlined">
-            Cancelar
-          </Button>
-          <Button onClick={handleConfirmDelete} color="error" variant="contained">
-            Deletar
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <ConfirmationDialog
+        open={openConfirmation}
+        onClose={handleCloseConfirmation}
+        onConfirm={handleConfirmDelete}
+        message="Tem certeza que deseja deletar este usuário?"
+      />
     </>
   );
 };

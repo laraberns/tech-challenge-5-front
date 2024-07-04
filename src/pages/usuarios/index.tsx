@@ -61,7 +61,7 @@ const Usuarios = () => {
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 5}}>
             <Image src={logoImg} alt="Workflow" width={250} height={100} />
             </Box>
-            <Typography variant="h5" sx={{ my: 2 }}>
+            <Typography sx={{ display: 'flex', justifyContent: 'center', my: 2, fontSize: '30px' }}>
                 Gestão de Usuários
             </Typography>
             <UserTable users={users} onEdit={handleEdit} onDelete={handleDelete} />
