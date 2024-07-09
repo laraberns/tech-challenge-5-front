@@ -10,6 +10,7 @@ import Image from 'next/image';
 import logoImg from '../../assets/logo.svg';
 import { db } from '../../services/firebaseConfig';
 import { addDoc, collection, deleteDoc, doc, getDocs, updateDoc } from 'firebase/firestore';
+import Link from 'next/link';
 
 const Transition = forwardRef(function Transition(props: SlideProps & { children: React.ReactElement<any, any> }, ref: React.Ref<unknown>) {
     return <Slide direction="up" ref={ref} {...props} />;
@@ -56,7 +57,7 @@ const Usuarios = () => {
             console.error('Error ao deletar usuário:', error);
         }
     };
-    
+
     const handleSave = async (user: Omit<IUser, 'id'>) => {
         try {
             if (selectedUser) {
@@ -78,39 +79,46 @@ const Usuarios = () => {
 
     return (
         <Container>
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 5 }}>
-            <Image src={logoImg} alt="Workflow" width={250} height={100} />
-        </Box>
-        <Typography sx={{ display: 'flex', justifyContent: 'center', my: 2, fontSize: '30px' }}>
-            Gestão de Usuários
-        </Typography>
-        {users.length === 0 ? (
-            <Typography variant="h6" align="center" mt={3}>
-                Não há usuários cadastrados ainda. Adicione um usuário.
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 5 }}>
+                <Image src={logoImg} alt="Workflow" width={250} height={100} />
+            </Box>
+            <Typography sx={{ display: 'flex', justifyContent: 'center', my: 2, fontSize: '30px' }}>
+                Gestão de Usuários
             </Typography>
-        ) : (
-            <UserTable users={users} onEdit={handleEdit} onDelete={handleDelete} />
-        )}
-        <Dialog open={open} onClose={handleCancel} fullScreen TransitionComponent={Transition}>
-            <DialogTitle>{selectedUser ? 'Editar Usuário' : 'Adicionar Usuário'}</DialogTitle>
-            <DialogContent>
-                <UserForm user={selectedUser || undefined} onSave={handleSave} onCancel={handleCancel} />
-            </DialogContent>
-        </Dialog>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-            <Button variant="contained" color="primary" onClick={handleAdd} sx={{ mt: 4 }}>
-                Adicionar Usuário
-            </Button>
-            <Button variant="contained" color="error" onClick={async () => {
-                const success = await signOut();
-                if (success) {
-                    alert('Logout com sucesso');
-                }
-            }} sx={{ mt: 4 }}>
-                Sair
-            </Button>
-        </Box>
-    </Container>
+            {users.length === 0 ? (
+                <Typography variant="h6" align="center" mt={3}>
+                    Não há usuários cadastrados ainda. Adicione um usuário.
+                </Typography>
+            ) : (
+                <UserTable users={users} onEdit={handleEdit} onDelete={handleDelete} />
+            )}
+            <Dialog open={open} onClose={handleCancel} fullScreen TransitionComponent={Transition}>
+                <DialogTitle>{selectedUser ? 'Editar Usuário' : 'Adicionar Usuário'}</DialogTitle>
+                <DialogContent>
+                    <UserForm user={selectedUser || undefined} onSave={handleSave} onCancel={handleCancel} />
+                </DialogContent>
+            </Dialog>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
+                <Box sx={{display: 'flex', gap: 2}}>
+                    <Button variant="contained" color="primary" onClick={handleAdd}>
+                        Adicionar Usuário
+                    </Button>
+                    <Link href="/tarefas">
+                        <Button variant="contained" color="secondary">
+                            Visualizar Tarefas
+                        </Button>
+                    </Link>
+                </Box>
+                <Button variant="contained" color="error" onClick={async () => {
+                    const success = await signOut();
+                    if (success) {
+                        alert('Logout com sucesso');
+                    }
+                }}>
+                    Sair
+                </Button>
+            </Box>
+        </Container>
     );
 };
 

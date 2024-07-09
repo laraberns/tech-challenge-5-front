@@ -11,6 +11,7 @@ import Image from 'next/image';
 import { addDoc, collection, deleteDoc, doc, getDocs, updateDoc } from 'firebase/firestore';
 import { db } from '../../services/firebaseConfig'
 import { IUser } from '@/components/users/userTable';
+import Link from 'next/link';
 
 const TaskPage: React.FC = () => {
     const [tasks, setTasks] = useState<ITask[]>([]);
@@ -117,9 +118,16 @@ const TaskPage: React.FC = () => {
                 <UserHoursSummary tasks={tasks} />
             </Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', my: 4 }}>
-                <Button variant="contained" color="primary" onClick={handleAdd}>
-                    Adicionar Tarefa
-                </Button>
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                    <Button variant="contained" color="primary" onClick={handleAdd}>
+                        Adicionar Tarefa
+                    </Button>
+                    <Link href="/usuarios">
+                        <Button variant="contained" color="secondary">
+                            Visualizar Usuários
+                        </Button>
+                    </Link>
+                </Box>
                 <Button variant="contained" color="error" onClick={async () => {
                     const success = await signOut();
                     if (success) {
