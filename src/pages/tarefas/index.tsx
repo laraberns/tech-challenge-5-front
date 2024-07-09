@@ -101,7 +101,13 @@ const TaskPage: React.FC = () => {
             <Typography sx={{ display: 'flex', justifyContent: 'center', my: 2, fontSize: '30px' }}>
                 Gestão de Tarefas
             </Typography>
-            <TaskBoard tasks={tasks} onEdit={handleEdit} onDelete={handleDeleteConfirmation} />
+            {tasks.length === 0 ? (
+                <Typography variant="h6" align="center" mt={3}>
+                    Não há tarefas cadastradas ainda. Adicione uma tarefa.
+                </Typography>
+            ) : (
+                <TaskBoard tasks={tasks} onEdit={handleEdit} onDelete={handleDeleteConfirmation} />
+            )}
             <Dialog open={openForm} onClose={() => setOpenForm(false)} maxWidth="sm" fullWidth>
                 <DialogTitle>{selectedTask ? 'Editar Tarefa' : 'Adicionar Tarefa'}</DialogTitle>
                 <DialogContent>
@@ -115,7 +121,7 @@ const TaskPage: React.FC = () => {
                 message="Tem certeza que deseja deletar esta tarefa?"
             />
             <Box mt={4}>
-                <UserHoursSummary tasks={tasks} />
+                {tasks.length > 0 && <UserHoursSummary tasks={tasks} />}
             </Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', my: 4 }}>
                 <Box sx={{ display: 'flex', gap: 2 }}>
