@@ -7,8 +7,8 @@ export interface ITask {
   name: string;
   description: string;
   priority: 'Alta' | 'Média' | 'Baixa';
-  estimatedTime: number;
-  assignedUser: string;
+  time: number;
+  user: string;
   status: 'Backlog' | 'Em Desenvolvimento' | 'Finalizada';
 }
 
@@ -19,6 +19,7 @@ interface TaskBoardProps {
 }
 
 const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, onEdit, onDelete }) => {
+
   const columns = {
     Backlog: tasks.filter((task) => task.status === 'Backlog'),
     'Em Desenvolvimento': tasks.filter((task) => task.status === 'Em Desenvolvimento'),
@@ -52,8 +53,8 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, onEdit, onDelete }) => {
                   <Typography variant="h6" sx={{ fontWeight: 'bold' }}>{task.name}</Typography>
                   <Typography><span style={{ fontWeight: 'bold', color: "GrayText" }}>Descrição:</span> {task.description}</Typography>
                   <Typography><span style={{ fontWeight: 'bold', color: "GrayText" }}>Prioridade: </span>{task.priority}</Typography>
-                  <Typography><span style={{ fontWeight: 'bold', color: "GrayText" }}>Tempo Estimado: </span>{task.estimatedTime}h</Typography>
-                  <Typography><span style={{ fontWeight: 'bold', color: "GrayText" }}>Usuário Atribuído: </span> {task.assignedUser}</Typography>
+                  <Typography><span style={{ fontWeight: 'bold', color: "GrayText" }}>Tempo Estimado: </span>{task.time}h</Typography>
+                  <Typography><span style={{ fontWeight: 'bold', color: "GrayText" }}>Usuário Atribuído: </span> {task.user}</Typography>
                   <Box display="flex" justifyContent="flex-end">
                     <IconButton onClick={() => onEdit(task)}>
                       <Edit />

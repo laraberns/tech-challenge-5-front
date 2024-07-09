@@ -1,36 +1,56 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Container, Button, Dialog, DialogTitle, DialogContent, Typography, Box } from '@mui/material';
 import TaskBoard, { ITask } from '@/components/tasks/taskBoard';
 import TaskForm from '@/components/tasks/taskForm';
 import ConfirmationDialog from '@/components/confirmationDialog';
 import { useSignOut } from 'react-firebase-hooks/auth';
-import LoadingPage from '@/components/loading';
 import { auth } from '@/services/firebaseConfig';
 import UserHoursSummary from '@/components/tasks/userHoursSummary';
 import logoImg from '../../assets/logo.svg';
 import Image from 'next/image';
-
-const mockUsers = [
-    { id: '1', name: 'User One' },
-    { id: '2', name: 'User Two' },
-];
-
-const mockTasks: ITask[] = [
-    { id: 1, name: 'Task One', description: 'Description One', priority: 'Alta', estimatedTime: 5, assignedUser: 'User One', status: 'Backlog' },
-    { id: 2, name: 'Task Two', description: 'Description Two', priority: 'Média', estimatedTime: 3, assignedUser: 'User Two', status: 'Em Desenvolvimento' },
-];
+import { addDoc, collection, deleteDoc, doc, getDocs, updateDoc } from 'firebase/firestore';
+import { db } from '../../services/firebaseConfig'
+import { IUser } from '@/components/users/userTable';
 
 const TaskPage: React.FC = () => {
-    const [tasks, setTasks] = useState<ITask[]>(mockTasks);
+    const [tasks, setTasks] = useState<ITask[]>([]);
     const [selectedTask, setSelectedTask] = useState<ITask | undefined>(undefined);
     const [openForm, setOpenForm] = useState(false);
     const [openConfirm, setOpenConfirm] = useState(false);
-    const [taskToDelete, setTaskToDelete] = useState<number | null>(null);
-    const [signOut, loading] = useSignOut(auth);
+    const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
+    const [users, setUsers] = useState<IUser[]>([]);
+    const [signOut] = useSignOut(auth);
 
-    if (loading) {
-        return <LoadingPage />;
-    }
+    useEffect(() => {
+        const fetchTasks = async () => {
+            try {
+                const querySnapshot = await getDocs(collection(db, 'tasks'));
+                const fetchedTasks: ITask[] = [];
+                querySnapshot.forEach((doc) => {
+                    fetchedTasks.push({ id: doc.id, ...doc.data() } as ITask);
+                });
+                setTasks(fetchedTasks);
+            } catch (error) {
+                console.error('Erro:', error);
+            }
+        };
+
+        const fetchUsers = async () => {
+            try {
+                const querySnapshot = await getDocs(collection(db, 'users'));
+                const fetchedUsers: IUser[] = [];
+                querySnapshot.forEach((doc) => {
+                    fetchedUsers.push({ id: doc.id, ...doc.data() } as IUser);
+                });
+                setUsers(fetchedUsers);
+            } catch (error) {
+                console.error('Erro:', error);
+            }
+        };
+
+        fetchUsers();
+        fetchTasks();
+    }, []);
 
     const handleAdd = () => {
         setSelectedTask(undefined);
@@ -42,25 +62,34 @@ const TaskPage: React.FC = () => {
         setOpenForm(true);
     };
 
-    const handleDelete = (id: number) => {
-        setTaskToDelete(id);
+    const handleDelete = async (taskId: string) => {
+        try {
+            await deleteDoc(doc(db, 'tasks', taskId));
+            setTasks(tasks.filter(task => task.id !== taskId));
+            setOpenConfirm(false);
+        } catch (error) {
+            console.error('Error ao deletar tarefa:', error);
+        }
+    };
+
+    const handleSave = async (task: Omit<ITask, 'id'>) => {
+        try {
+            if (selectedTask) {
+                await updateDoc(doc(db, 'tasks', selectedTask.id), task);
+                setTasks(tasks.map(u => (u.id === selectedTask.id ? { ...selectedTask, ...task } : u)));
+            } else {
+                const newtaskRef = await addDoc(collection(db, 'tasks'), task);
+                setTasks([...tasks, { id: newtaskRef.id, ...task }]);
+            }
+            setOpenForm(false);
+        } catch (error) {
+            console.error('Erro ao salvar tarefa:', error);
+        }
+    };
+
+    const handleDeleteConfirmation = (taskId: string) => {
+        setTaskToDelete(taskId);
         setOpenConfirm(true);
-    };
-
-    const handleConfirmDelete = () => {
-        if (taskToDelete !== null) {
-            setTasks(tasks.filter(task => task.id !== taskToDelete));
-        }
-        setOpenConfirm(false);
-    };
-
-    const handleSave = (task: Omit<ITask, 'id'>) => {
-        if (selectedTask) {
-            setTasks(tasks.map(t => (t.id === selectedTask.id ? { ...selectedTask, ...task } : t)));
-        } else {
-            setTasks([...tasks, { id: tasks.length + 1, ...task }]);
-        }
-        setOpenForm(false);
     };
 
     return (
@@ -71,17 +100,17 @@ const TaskPage: React.FC = () => {
             <Typography sx={{ display: 'flex', justifyContent: 'center', my: 2, fontSize: '30px' }}>
                 Gestão de Tarefas
             </Typography>
-            <TaskBoard tasks={tasks} onEdit={handleEdit} onDelete={handleDelete} />
+            <TaskBoard tasks={tasks} onEdit={handleEdit} onDelete={handleDeleteConfirmation} />
             <Dialog open={openForm} onClose={() => setOpenForm(false)} maxWidth="sm" fullWidth>
                 <DialogTitle>{selectedTask ? 'Editar Tarefa' : 'Adicionar Tarefa'}</DialogTitle>
                 <DialogContent>
-                    <TaskForm task={selectedTask} onSave={handleSave} onCancel={() => setOpenForm(false)} users={mockUsers} />
+                    <TaskForm task={selectedTask} onSave={handleSave} onCancel={() => setOpenForm(false)} users={users} />
                 </DialogContent>
             </Dialog>
             <ConfirmationDialog
                 open={openConfirm}
                 onClose={() => setOpenConfirm(false)}
-                onConfirm={handleConfirmDelete}
+                onConfirm={() => taskToDelete && handleDelete(taskToDelete)}
                 message="Tem certeza que deseja deletar esta tarefa?"
             />
             <Box mt={4}>
@@ -105,3 +134,4 @@ const TaskPage: React.FC = () => {
 };
 
 export default TaskPage;
+

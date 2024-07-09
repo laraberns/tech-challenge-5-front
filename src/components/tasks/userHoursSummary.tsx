@@ -10,8 +10,8 @@ const UserHoursSummary: React.FC<UserHoursSummaryProps> = ({ tasks }) => {
   const [selectedUser, setSelectedUser] = useState<string | undefined>(undefined);
 
   const calculateTotalHours = (userId: string, status: 'Backlog' | 'Em Desenvolvimento' | 'Finalizada'): number => {
-    const filteredTasks = tasks.filter(task => task.assignedUser === userId && task.status === status);
-    return filteredTasks.reduce((total, task) => total + task.estimatedTime, 0);
+    const filteredTasks = tasks.filter(task => task.user === userId && task.status === status);
+    return filteredTasks.reduce((total, task) => total + task.time, 0);
   };
 
   return (
@@ -27,7 +27,7 @@ const UserHoursSummary: React.FC<UserHoursSummaryProps> = ({ tasks }) => {
         <MenuItem value="" disabled>
           Selecione um usuário
         </MenuItem>
-        {tasks.map(task => task.assignedUser).filter((value, index, self) => self.indexOf(value) === index).map(user => (
+        {tasks.map(task => task.user).filter((value, index, self) => self.indexOf(value) === index).map(user => (
           <MenuItem key={user} value={user}>{user}</MenuItem>
         ))}
       </Select>

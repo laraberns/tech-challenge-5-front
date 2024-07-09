@@ -16,20 +16,20 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, onSave, onCancel, users }) =>
   const [name, setName] = useState(task?.name || '');
   const [description, setDescription] = useState(task?.description || '');
   const [priority, setPriority] = useState<ITask['priority']>(task?.priority || 'Média');
-  const [estimatedTime, setEstimatedTime] = useState(task?.estimatedTime || 0);
-  const [assignedUser, setAssignedUser] = useState(task?.assignedUser || '');
+  const [estimatedTime, setEstimatedTime] = useState(task?.time || 0);
+  const [assignedUser, setAssignedUser] = useState(task?.user || '');
   const [status, setStatus] = useState<ITask['status']>(task?.status || 'Backlog');
 
   const handleSave = () => {
-    onSave({ name, description, priority, estimatedTime, assignedUser, status });
+    onSave({ name, description, priority, time: estimatedTime, user: assignedUser, status });
   };
 
   useEffect(() => {
     setName(task?.name || '');
     setDescription(task?.description || '');
     setPriority(task?.priority || 'Média');
-    setEstimatedTime(task?.estimatedTime || 0);
-    setAssignedUser(task?.assignedUser || '');
+    setEstimatedTime(task?.time || 0);
+    setAssignedUser(task?.user || '');
     setStatus(task?.status || 'Backlog');
   }, [task]);
 
