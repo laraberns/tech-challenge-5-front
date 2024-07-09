@@ -3,7 +3,7 @@ import { Box, Card, CardContent, Typography, IconButton, Grid } from '@mui/mater
 import { Edit, Delete } from '@mui/icons-material';
 
 export interface ITask {
-  id: number;
+  id: string;
   name: string;
   description: string;
   priority: 'Alta' | 'Média' | 'Baixa';
@@ -15,7 +15,7 @@ export interface ITask {
 interface TaskBoardProps {
   tasks: ITask[];
   onEdit: (task: ITask) => void;
-  onDelete: (id: number) => void;
+  onDelete: (userId: string) => void;
 }
 
 const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, onEdit, onDelete }) => {

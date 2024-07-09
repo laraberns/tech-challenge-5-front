@@ -1,6 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { TextField, Button, Box } from '@mui/material';
+import { TextField, Button, Box, MenuItem } from '@mui/material';
 import { IUser } from './userTable';
+
+const teamOptions = [
+  'Recursos Humanos (RH)',
+  'Vendas',
+  'Marketing',
+  'Desenvolvimento de Produto',
+  'Suporte ao Cliente',
+  'TI (Tecnologia da Informação)',
+  'Finanças',
+  'Jurídico e Compliance'
+];
 
 interface UserFormProps {
   user?: IUser;
@@ -39,7 +50,7 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSave, onCancel }) => {
         label="E-mail"
         variant="outlined"
         value={email}
-        sx={{mt: 1}}
+        sx={{ mt: 1 }}
         onChange={(e) => setEmail(e.target.value)}
         required
       />
@@ -58,12 +69,19 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSave, onCancel }) => {
         required
       />
       <TextField
+        select
         label="Time"
         variant="outlined"
         value={team}
         onChange={(e) => setTeam(e.target.value)}
         required
-      />
+      >
+        {teamOptions.map((option) => (
+          <MenuItem key={option} value={option}>
+            {option}
+          </MenuItem>
+        ))}
+      </TextField>
       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
         <Button variant="contained" color="primary" type="submit">
           Salvar
