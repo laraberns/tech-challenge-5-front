@@ -10,6 +10,7 @@ export interface ITask {
   time: number;
   user: string;
   status: 'Backlog' | 'Em Desenvolvimento' | 'Finalizada';
+  finalDate: string
 }
 
 interface TaskBoardProps {
@@ -55,6 +56,7 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, onEdit, onDelete }) => {
                   <Typography><span style={{ fontWeight: 'bold', color: "GrayText" }}>Prioridade: </span>{task.priority}</Typography>
                   <Typography><span style={{ fontWeight: 'bold', color: "GrayText" }}>Tempo Estimado: </span>{task.time}h</Typography>
                   <Typography><span style={{ fontWeight: 'bold', color: "GrayText" }}>Usuário Atribuído: </span> {task.user}</Typography>
+                  <Typography><span style={{ fontWeight: 'bold', color: "GrayText" }}>Data final estimada: </span> {task.finalDate}</Typography>
                   <Box display="flex" justifyContent="flex-end">
                     <IconButton onClick={() => onEdit(task)}>
                       <Edit />

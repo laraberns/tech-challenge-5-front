@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TextField, Button, MenuItem, DialogActions, Box } from '@mui/material';
+import { TextField, Button, MenuItem, DialogActions, Box, Typography } from '@mui/material';
 import { ITask } from './taskBoard';
 
 interface TaskFormProps {
@@ -19,9 +19,10 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, onSave, onCancel, users }) =>
   const [estimatedTime, setEstimatedTime] = useState(task?.time || 0);
   const [assignedUser, setAssignedUser] = useState(task?.user || '');
   const [status, setStatus] = useState<ITask['status']>(task?.status || 'Backlog');
+  const [finalDate, setFinalDate] = useState<ITask['finalDate']>(task?.finalDate || '');
 
   const handleSave = () => {
-    onSave({ name, description, priority, time: estimatedTime, user: assignedUser, status });
+    onSave({ name, description, priority, time: estimatedTime, user: assignedUser, status, finalDate });
   };
 
   useEffect(() => {
@@ -31,7 +32,19 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, onSave, onCancel, users }) =>
     setEstimatedTime(task?.time || 0);
     setAssignedUser(task?.user || '');
     setStatus(task?.status || 'Backlog');
+    setFinalDate(task?.finalDate || '');
   }, [task]);
+
+  const handleFinalDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedDate = new Date(e.target.value);
+    const currentDate = new Date();
+
+    if (selectedDate >= currentDate) {
+      setFinalDate(e.target.value);
+    } else {
+      alert('Por favor, selecione uma data futura ou hoje.');
+    }
+  };
 
   return (
     <Box component="form" noValidate autoComplete="off" sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 1 }}>
@@ -93,6 +106,15 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, onSave, onCancel, users }) =>
           </MenuItem>
         ))}
       </TextField>
+      <Box>
+        <Typography>Data Final</Typography>
+        <TextField
+          type="date"
+          value={finalDate}
+          onChange={handleFinalDateChange}
+          fullWidth
+        />
+      </Box>
       <DialogActions>
         <Button onClick={onCancel} variant="outlined">
           Cancelar
