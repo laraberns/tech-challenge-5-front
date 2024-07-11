@@ -8,11 +8,11 @@ import { auth } from '@/services/firebaseConfig';
 import UserHoursSummary from '@/components/tasks/userHoursSummary';
 import logoImg from '../../assets/logo.svg';
 import Image from 'next/image';
-import { addDoc, collection, deleteDoc, doc, getDocs, updateDoc } from 'firebase/firestore';
-import { db } from '../../services/firebaseConfig'
 import { IUser } from '@/components/users/userTable';
 import Link from 'next/link';
 import withAuth from '@/components/withAuth';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const TaskPage: React.FC = () => {
     const [tasks, setTasks] = useState<ITask[]>([]);
@@ -22,32 +22,31 @@ const TaskPage: React.FC = () => {
     const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
     const [users, setUsers] = useState<IUser[]>([]);
     const [signOut] = useSignOut(auth);
-    
+
     useEffect(() => {
         const fetchTasks = async () => {
             try {
-                const querySnapshot = await getDocs(collection(db, 'tasks'));
-                const fetchedTasks: ITask[] = [];
-                querySnapshot.forEach((doc) => {
-                    fetchedTasks.push({ id: doc.id, ...doc.data() } as ITask);
-                });
+                const response = await fetch(`${process.env.BD_API}/tasks/alltasks`);
+                if (!response.ok) {
+                    throw new Error('Erro ao buscar as tarefas');
+                }
+                const fetchedTasks = await response.json();
                 setTasks(fetchedTasks);
-            } catch (error) {
-                console.error('Erro:', error);
+            } catch (error: any) {
+                toast.error(`Erro ao buscar as tasks: ${error.message}`);
             }
-        };
-
+        }
 
         const fetchUsers = async () => {
             try {
-                const querySnapshot = await getDocs(collection(db, 'users'));
-                const fetchedUsers: IUser[] = [];
-                querySnapshot.forEach((doc) => {
-                    fetchedUsers.push({ id: doc.id, ...doc.data() } as IUser);
-                });
+                const response = await fetch(`${process.env.BD_API}/users/allusers`);
+                if (!response.ok) {
+                    throw new Error('Erro ao buscar os usuários');
+                }
+                const fetchedUsers = await response.json();
                 setUsers(fetchedUsers);
-            } catch (error) {
-                console.error('Erro:', error);
+            } catch (error: any) {
+                toast.error(`Erro ao buscar os usuários: ${error.message}`);
             }
         };
 
@@ -67,26 +66,83 @@ const TaskPage: React.FC = () => {
 
     const handleDelete = async (taskId: string) => {
         try {
-            await deleteDoc(doc(db, 'tasks', taskId));
+            const response = await fetch(`${process.env.BD_API}/tasks/${taskId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Erro ao deletar tarefa');
+            }
+
             setTasks(tasks.filter(task => task.id !== taskId));
-            setOpenConfirm(false);
-        } catch (error) {
-            console.error('Error ao deletar tarefa:', error);
+            toast.success('Tarefa deletada com sucesso!');
+        } catch (error: any) {
+            toast.error(`Erro ao deletar tarefa: ${error.message}`);
         }
-    };
+    }
 
     const handleSave = async (task: Omit<ITask, 'id'>) => {
         try {
             if (selectedTask) {
-                await updateDoc(doc(db, 'tasks', selectedTask.id), task);
+                const url = `${process.env.BD_API}/tasks/changetask`;
+
+                const requestOptions = {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        id: selectedTask.id,
+                        ...task
+                    })
+                };
+
+                const response = await fetch(url, requestOptions);
+
+                if (response.status === 400 || response.status === 404) {
+                    const errorMessage = await response.text();
+                    throw new Error(errorMessage);
+                }
+
                 setTasks(tasks.map(u => (u.id === selectedTask.id ? { ...selectedTask, ...task } : u)));
             } else {
-                const newtaskRef = await addDoc(collection(db, 'tasks'), task);
-                setTasks([...tasks, { id: newtaskRef.id, ...task }]);
+                const url = `${process.env.BD_API}/tasks/addtask`;
+
+                const requestOptions = {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: task.name,
+                        description: task.description,
+                        priority: task.priority,
+                        time: task.time,
+                        user: task.user,
+                        status: task.status,
+                        finalDate: task.finalDate,
+                    })
+                };
+
+                const response = await fetch(url, requestOptions);
+
+                if (response.status === 400 || response.status === 404) {
+                    const errorMessage = await response.text();
+                    throw new Error(errorMessage);
+                }
+
+                const responseData = await response.json();
+
+                setTasks([...tasks, { id: responseData.id, ...task }]);
             }
-            setOpenForm(false);
-        } catch (error) {
-            console.error('Erro ao salvar tarefa:', error);
+
+            toast.success(selectedTask ? 'Tarefa editada com sucesso!' : 'Tarefa adicionada com sucesso!');
+            setOpenForm(false); // Fechar o Dialog após salvar
+        } catch (error: any) {
+            toast.error(`Erro: ${error.message}`);
         }
     };
 
@@ -96,7 +152,8 @@ const TaskPage: React.FC = () => {
     };
 
     return (
-        <Container>
+        <Container>    
+            <ToastContainer />
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 5 }}>
                 <Image src={logoImg} alt="Workflow" width={250} height={100} />
             </Box>
@@ -119,9 +176,13 @@ const TaskPage: React.FC = () => {
             <ConfirmationDialog
                 open={openConfirm}
                 onClose={() => setOpenConfirm(false)}
-                onConfirm={() => taskToDelete && handleDelete(taskToDelete)}
+                onConfirm={() => {
+                    handleDelete(taskToDelete!); 
+                    setOpenConfirm(false);
+                }}
                 message="Tem certeza que deseja deletar esta tarefa?"
             />
+
             <Box mt={4}>
                 {tasks.length > 0 && <UserHoursSummary tasks={tasks} />}
             </Box>
@@ -150,4 +211,3 @@ const TaskPage: React.FC = () => {
 };
 
 export default withAuth(TaskPage);
-

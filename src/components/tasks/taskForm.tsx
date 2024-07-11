@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { TextField, Button, MenuItem, DialogActions, Box, Typography } from '@mui/material';
 import { ITask } from './taskBoard';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 interface TaskFormProps {
   task?: ITask;
@@ -42,12 +44,13 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, onSave, onCancel, users }) =>
     if (selectedDate >= currentDate) {
       setFinalDate(e.target.value);
     } else {
-      alert('Por favor, selecione uma data futura ou hoje.');
+      toast.error('Por favor, selecione uma data futura ou hoje.');
     }
   };
 
   return (
     <Box component="form" noValidate autoComplete="off" sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 1 }}>
+      <ToastContainer />
       <TextField
         label="Nome da Tarefa"
         value={name}

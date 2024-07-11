@@ -22,7 +22,7 @@ export default function Login() {
   const { token } = useFcmToken();
 
   async function storeFCMToken(userId: string, token: string) {
-    const url = 'http://localhost:8383/fcm/store';
+    const url = `${process.env.BD_API}/fcm/store`;
 
     const requestOptions = {
       method: 'POST',
