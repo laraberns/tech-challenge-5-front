@@ -1,20 +1,19 @@
+
+import { auth } from '@/services/firebaseConfig';
+import { Container, Typography, Button, Dialog, DialogTitle, DialogContent, Box } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { useSignOut } from 'react-firebase-hooks/auth';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import UserTable, { IUser } from '@/components/users/userTable';
 import withAuth from '@/components/withAuth';
-import { auth } from '@/services/firebaseConfig';
-import React, { forwardRef, useState, useEffect } from 'react';
-import { useSignOut } from 'react-firebase-hooks/auth';
-import { Container, Typography, Button, Dialog, DialogTitle, DialogContent, Box } from '@mui/material';
 import UserForm from '@/components/users/userForm';
-import Slide, { SlideProps } from '@mui/material/Slide';
+import Slide from '@mui/material/Slide';
 import Image from 'next/image';
 import logoImg from '../../assets/logo.svg';
-import { db } from '../../services/firebaseConfig';
-import { addDoc, collection, deleteDoc, doc, getDocs, updateDoc } from 'firebase/firestore';
 import Link from 'next/link';
 
-const Transition = forwardRef(function Transition(props: SlideProps & { children: React.ReactElement<any, any> }, ref: React.Ref<unknown>) {
-    return <Slide direction="up" ref={ref} {...props} />;
-});
+const Transition = Slide;
 
 const Usuarios = () => {
     const [signOut] = useSignOut(auth);
@@ -25,19 +24,19 @@ const Usuarios = () => {
     useEffect(() => {
         const fetchUsers = async () => {
             try {
-                const querySnapshot = await getDocs(collection(db, 'users'));
-                const fetchedUsers: IUser[] = [];
-                querySnapshot.forEach((doc) => {
-                    fetchedUsers.push({ id: doc.id, ...doc.data() } as IUser);
-                });
+                const response = await fetch(`${process.env.BD_API}/users/allusers`);
+                if (!response.ok) {
+                    throw new Error('Erro ao buscar os usuários');
+                }
+                const fetchedUsers = await response.json();
                 setUsers(fetchedUsers);
-            } catch (error) {
-                console.error('Erro:', error);
+            } catch (error: any) {
+                toast.error(`Erro ao buscar os usuários: ${error.message}`);
             }
         };
 
         fetchUsers();
-    }, [])
+    }, []);
 
     const handleAdd = () => {
         setSelectedUser(null);
@@ -51,25 +50,80 @@ const Usuarios = () => {
 
     const handleDelete = async (userId: string) => {
         try {
-            await deleteDoc(doc(db, 'users', userId));
+            const response = await fetch(`${process.env.BD_API}/users/${userId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Erro ao deletar usuário');
+            }
+
             setUsers(users.filter(user => user.id !== userId));
-        } catch (error) {
-            console.error('Error ao deletar usuário:', error);
+            toast.success('Usuário deletado com sucesso!');
+        } catch (error: any) {
+            toast.error(`Erro ao deletar usuário: ${error.message}`);
         }
-    };
+    }
 
     const handleSave = async (user: Omit<IUser, 'id'>) => {
         try {
             if (selectedUser) {
-                await updateDoc(doc(db, 'users', selectedUser.id), user);
+                const url =`${process.env.BD_API}/users/changeuser`;
+
+                const requestOptions = {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        id: selectedUser.id,
+                        ...user
+                    })
+                };
+
+                const response = await fetch(url, requestOptions);
+
+                if (response.status == 400 || response.status == 404) {
+                    const errorMessage = await response.text();
+                    throw new Error(errorMessage);
+                }
+
                 setUsers(users.map(u => (u.id === selectedUser.id ? { ...selectedUser, ...user } : u)));
             } else {
-                const newUserRef = await addDoc(collection(db, 'users'), user);
-                setUsers([...users, { id: newUserRef.id, ...user }]);
+                const url = `${process.env.BD_API}/users/adduser`;
+
+                const requestOptions = {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: user.name,
+                        email: user.email,
+                        role: user.role,
+                        team: user.team
+                    })
+                };
+
+                const response = await fetch(url, requestOptions);
+        
+                if (response.status == 400 || response.status == 404) {
+                    const errorMessage = await response.text();
+                    throw new Error(errorMessage);
+                }
+
+                const responseData = await response.json();
+
+                setUsers([...users, { id: responseData.id, ...user }]);
             }
+
             setOpen(false);
-        } catch (error) {
-            console.error('Erro ao salvar usuário:', error);
+            toast.success(selectedUser ? 'Usuário editado com sucesso!' : 'Usuário adicionado com sucesso!');
+        } catch (error: any) {
+            toast.error(`Erro: ${error.message}`);
         }
     };
 
@@ -85,6 +139,7 @@ const Usuarios = () => {
             <Typography sx={{ display: 'flex', justifyContent: 'center', my: 2, fontSize: '30px' }}>
                 Gestão de Usuários
             </Typography>
+            <ToastContainer />
             {users.length === 0 ? (
                 <Typography variant="h6" align="center" mt={3}>
                     Não há usuários cadastrados ainda. Adicione um usuário.
@@ -99,7 +154,7 @@ const Usuarios = () => {
                 </DialogContent>
             </Dialog>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
-                <Box sx={{display: 'flex', gap: 2}}>
+                <Box sx={{ display: 'flex', gap: 2 }}>
                     <Button variant="contained" color="primary" onClick={handleAdd}>
                         Adicionar Usuário
                     </Button>

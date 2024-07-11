@@ -50,7 +50,7 @@ export default function Login() {
 
   useEffect(() => {
     if (user) {
-      router.push('/tarefas');
+      router.push('/usuarios');
     }
   }, [user, router]);
 
