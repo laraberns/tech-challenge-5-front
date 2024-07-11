@@ -49,7 +49,9 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, onSave, onCancel, users }) =>
 
   const handleFinalDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedDate = new Date(e.target.value);
-    const currentDate = new Date();
+    selectedDate.setDate(selectedDate.getDate() + 1); 
+    selectedDate.setHours(23, 59, 59, 999);
+    const currentDate = new Date()
 
     if (selectedDate >= currentDate) {
       setFinalDate(e.target.value);
