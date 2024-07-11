@@ -12,6 +12,7 @@ import { addDoc, collection, deleteDoc, doc, getDocs, updateDoc } from 'firebase
 import { db } from '../../services/firebaseConfig'
 import { IUser } from '@/components/users/userTable';
 import Link from 'next/link';
+import withAuth from '@/components/withAuth';
 
 const TaskPage: React.FC = () => {
     const [tasks, setTasks] = useState<ITask[]>([]);
@@ -21,7 +22,7 @@ const TaskPage: React.FC = () => {
     const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
     const [users, setUsers] = useState<IUser[]>([]);
     const [signOut] = useSignOut(auth);
-
+    
     useEffect(() => {
         const fetchTasks = async () => {
             try {
@@ -35,6 +36,7 @@ const TaskPage: React.FC = () => {
                 console.error('Erro:', error);
             }
         };
+
 
         const fetchUsers = async () => {
             try {
@@ -147,5 +149,5 @@ const TaskPage: React.FC = () => {
     );
 };
 
-export default TaskPage;
+export default withAuth(TaskPage);
 

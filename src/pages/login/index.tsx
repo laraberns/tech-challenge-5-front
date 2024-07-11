@@ -6,6 +6,9 @@ import logoImg from '../../assets/logo.svg';
 import { useSignInWithEmailAndPassword } from 'react-firebase-hooks/auth';
 import { auth } from '@/services/firebaseConfig';
 import { useRouter } from 'next/router';
+import { addDoc, collection } from 'firebase/firestore';
+import { db } from '@/services/firebaseConfig';
+import useFcmToken from '@/hooks/useFcmToken';
 
 export default function Login() {
   const router = useRouter();
@@ -17,15 +20,36 @@ export default function Login() {
     loading,
     error,
   ] = useSignInWithEmailAndPassword(auth);
+  
+  const { token } = useFcmToken();
+
+  async function storeFCMToken(userId: string, fcmToken: string) {
+
+    try {
+      const docRef = await addDoc(collection(db, 'FCMTokens'), { userId, token: fcmToken });
+      console.log('Token FCM armazenado com sucesso:', docRef.id, token);
+    } catch (error) {
+      console.error('Erro ao armazenar o token FCM:', error);
+    }
+  }
 
   function handleSignIn(e: FormEvent) {
     e.preventDefault();
-    signInWithEmailAndPassword(email, password);
+    signInWithEmailAndPassword(email, password)
+      .then(() => {
+        const userId = auth.currentUser?.uid;
+        if (userId && token) {
+          storeFCMToken(userId, token);
+        }
+      })
+      .catch((error) => {
+        console.error('Erro ao fazer login:', error);
+      });
   }
 
   useEffect(() => {
     if (user) {
-      router.push('/');
+      router.push('/tarefas');
     }
   }, [user, router]);
 
