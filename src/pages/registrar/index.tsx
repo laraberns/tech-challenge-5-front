@@ -5,25 +5,60 @@ import { Box } from '@mui/system';
 import logoImg from '../../assets/logo.svg';
 import { useCreateUserWithEmailAndPassword } from 'react-firebase-hooks/auth';
 import { auth } from '@/services/firebaseConfig';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function Register() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isEmailValid, setIsEmailValid] = useState(true);
+  const [isPasswordValid, setIsPasswordValid] = useState(true);
   const [
-    createUserWithEmFailAndPassword,
+    createUserWithEmailAndPassword,
     user,
     loading,
     error,
   ] = useCreateUserWithEmailAndPassword(auth);
 
   function handleRegister(e: FormEvent) {
-    e.preventDefault()
-    createUserWithEmFailAndPassword(email, password)
+    e.preventDefault();
+    if (isEmailValid && isPasswordValid) {
+      createUserWithEmailAndPassword(email, password);
+      toast.success("Registrado com sucesso!");
+    } else {
+      if (!email || !password) {
+        setIsEmailValid(email !== '');
+        setIsPasswordValid(password !== '');
+      }
+    }
+  }
+
+  function validateEmail(email: string) {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+  }
+
+  function validatePassword(password: string) {
+    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    return regex.test(password);
+  }
+
+  function handleEmailChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const newEmail = e.target.value;
+    setEmail(newEmail);
+    setIsEmailValid(validateEmail(newEmail) || newEmail === '');
+  }
+
+  function handlePasswordChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const newPassword = e.target.value;
+    setPassword(newPassword);
+    setIsPasswordValid(validatePassword(newPassword) || newPassword === '');
   }
 
   return (
     <Container maxWidth="xs">
+      <ToastContainer />
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 5 }}>
         <Image src={logoImg} alt="Workflow" width={250} height={100} />
         <Typography component="h1" variant="h5" sx={{ mt: 2 }}>
@@ -32,8 +67,10 @@ export default function Register() {
         <Typography variant="body1" sx={{ textAlign: 'center', mt: 2 }}>
           Comece sua jornada conosco! Preencha os campos abaixo para criar sua conta.
         </Typography>
-        <Box component="form" noValidate sx={{ mt: 2 }}>
+        <Box component="form" noValidate sx={{ mt: 2 }} onSubmit={handleRegister}>
           <TextField
+            error={!isEmailValid}
+            helperText={!isEmailValid && "Por favor, insira um email válido."}
             margin="normal"
             required
             fullWidth
@@ -43,9 +80,11 @@ export default function Register() {
             autoComplete="email"
             placeholder="johndoe@gmail.com"
             variant="outlined"
-            onChange={e => setEmail(e.target.value)}
+            onChange={handleEmailChange}
           />
           <TextField
+            error={!isPasswordValid}
+            helperText={!isPasswordValid && "A senha deve conter pelo menos 8 caracteres, uma letra maiúscula, uma letra minúscula, um número e um caractere especial."}
             margin="normal"
             required
             fullWidth
@@ -56,7 +95,7 @@ export default function Register() {
             autoComplete="new-password"
             placeholder="********************"
             variant="outlined"
-            onChange={e => setPassword(e.target.value)}
+            onChange={handlePasswordChange}
           />
           {error && (
             <Alert severity="error" sx={{ mt: 2 }}>
@@ -67,7 +106,6 @@ export default function Register() {
             type="submit"
             fullWidth
             variant="contained"
-            onClick={handleRegister}
             sx={{ mt: 3, mb: 2, bgcolor: '#4763E4', color: '#fff' }}
           >
             Registrar
