@@ -6,8 +6,6 @@ import logoImg from '../../assets/logo.svg';
 import { useSignInWithEmailAndPassword } from 'react-firebase-hooks/auth';
 import { auth } from '@/services/firebaseConfig';
 import { useRouter } from 'next/router';
-import { addDoc, collection } from 'firebase/firestore';
-import { db } from '@/services/firebaseConfig';
 import useFcmToken from '@/hooks/useFcmToken';
 
 export default function Login() {
@@ -20,16 +18,22 @@ export default function Login() {
     loading,
     error,
   ] = useSignInWithEmailAndPassword(auth);
-  
+
   const { token } = useFcmToken();
 
-  async function storeFCMToken(userId: string, fcmToken: string) {
+  async function storeFCMToken(userId: string, token: string) {
+    const url = 'http://localhost:8383/fcm/store';
+
+    const requestOptions = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, token })
+    };
 
     try {
-      const docRef = await addDoc(collection(db, 'FCMTokens'), { userId, token: fcmToken });
-      console.log('Token FCM armazenado com sucesso:', docRef.id, token);
-    } catch (error) {
-      console.error('Erro ao armazenar o token FCM:', error);
+      await fetch(url, requestOptions);
+    } catch (error: any) {
+      console.error('Erro ao enviar token FCM:', error.message);
     }
   }
 
@@ -37,10 +41,7 @@ export default function Login() {
     e.preventDefault();
     signInWithEmailAndPassword(email, password)
       .then(() => {
-        const userId = auth.currentUser?.uid;
-        if (userId && token) {
-          storeFCMToken(userId, token);
-        }
+        token && storeFCMToken(token, email);
       })
       .catch((error) => {
         console.error('Erro ao fazer login:', error);
