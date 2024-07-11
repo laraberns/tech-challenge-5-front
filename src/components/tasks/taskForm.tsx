@@ -3,10 +3,11 @@ import { TextField, Button, MenuItem, DialogActions, Box, Typography } from '@mu
 import { ITask } from './taskBoard';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import useFcmToken from '@/hooks/useFcmToken';
 
 interface TaskFormProps {
   task?: ITask;
-  onSave: (task: Omit<ITask, 'id'>) => void;
+  onSave: (task: any) => void;
   onCancel: () => void;
   users: { id: string, name: string }[];
 }
@@ -22,9 +23,17 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, onSave, onCancel, users }) =>
   const [assignedUser, setAssignedUser] = useState(task?.user || '');
   const [status, setStatus] = useState<ITask['status']>(task?.status || 'Backlog');
   const [finalDate, setFinalDate] = useState<ITask['finalDate']>(task?.finalDate || '');
+  const [fcmtoken, setFcmtoken] = useState<ITask['fcmtoken']>(task?.fcmtoken || '');
+  const { token } = useFcmToken();
+
+  useEffect(() => {
+    if (!task && token) {
+      setFcmtoken(token);
+    }
+  }, [task, token]);
 
   const handleSave = () => {
-    onSave({ name, description, priority, time: estimatedTime, user: assignedUser, status, finalDate });
+    onSave({ name, description, priority, time: estimatedTime, user: assignedUser, status, finalDate, fcmtoken })
   };
 
   useEffect(() => {
@@ -35,7 +44,8 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, onSave, onCancel, users }) =>
     setAssignedUser(task?.user || '');
     setStatus(task?.status || 'Backlog');
     setFinalDate(task?.finalDate || '');
-  }, [task]);
+    setFcmtoken(task?.fcmtoken || token || '');
+  }, [task, token]);
 
   const handleFinalDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedDate = new Date(e.target.value);

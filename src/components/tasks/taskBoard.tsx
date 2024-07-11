@@ -11,6 +11,7 @@ export interface ITask {
   user: string;
   status: 'Backlog' | 'Em Desenvolvimento' | 'Finalizada';
   finalDate: string
+  fcmtoken: string
 }
 
 interface TaskBoardProps {

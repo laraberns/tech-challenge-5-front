@@ -27,9 +27,12 @@ const TaskPage: React.FC = () => {
         const fetchTasks = async () => {
             try {
                 const response = await fetch(`${process.env.BD_API}/tasks/alltasks`);
-                if (!response.ok) {
-                    throw new Error('Erro ao buscar as tarefas');
+
+                if (response.status === 400 || response.status === 404) {
+                    const errorMessage = await response.text();
+                    throw new Error(errorMessage);
                 }
+                
                 const fetchedTasks = await response.json();
                 setTasks(fetchedTasks);
             } catch (error: any) {
@@ -124,6 +127,7 @@ const TaskPage: React.FC = () => {
                         user: task.user,
                         status: task.status,
                         finalDate: task.finalDate,
+                        fcmtoken: task.fcmtoken,
                     })
                 };
 

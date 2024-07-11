@@ -25,9 +25,12 @@ const Usuarios = () => {
         const fetchUsers = async () => {
             try {
                 const response = await fetch(`${process.env.BD_API}/users/allusers`);
-                if (!response.ok) {
-                    throw new Error('Erro ao buscar os usuários');
+
+                if (response.status === 400 || response.status === 404) {
+                    const errorMessage = await response.text();
+                    throw new Error(errorMessage);
                 }
+                
                 const fetchedUsers = await response.json();
                 setUsers(fetchedUsers);
             } catch (error: any) {
